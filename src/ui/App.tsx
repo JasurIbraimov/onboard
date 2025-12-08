@@ -22,6 +22,7 @@ import Modal from "./components/Modal/Modal";
 import { AGREEMENT_TYPES, SYSTEM_TYPES } from "./constants";
 import PersonsTable from "./features/PersonsTable/PersonsTable";
 
+
 const App = () => {
     const StepOrder: Steps[] = [
         Steps.FORMAT,
@@ -31,15 +32,15 @@ const App = () => {
     ];
 
     const [step, setStep] = useState<Steps>(Steps.FORMAT);
-    const [schemeWork, setSchemeWork] = useState<WorkScheme>("СЭД");
-    const [agreementType, setAgreementType] =
-        useState<AgreementType>("Публичная оферта");
+    const [workSchemes, setWorkSchemes] = useState<WorkScheme[]>([]);
+    const [agreementTypes, setAgreementTypes] =
+        useState<AgreementType[]>([]);
 
     const [merchant, setMerchant] = useState<MerchantResponse | null>(null);
     const [bankData, setBankData] = useState<BankData | null>(null);
     const [persons, setPersons] = useState<PersonData[]>([]);
     const [currentPerson, setCurrentPerson] = useState<PersonData | null>(null);
-    const [loading, setLoading] = useState(false);
+    const [loading] = useState(false);
     const [editIndex, setEditIndex] = useState<number | null>(null);
     const [isPersonFormOpen, setIsPersonFormOpen] = useState(false);
 
@@ -48,6 +49,28 @@ const App = () => {
         setIsPersonFormOpen(true);
         setEditIndex(index);
     };
+
+
+    const handleGenerate = async () => {
+        try {
+            console.log(window.electronAPI)
+            const outputPath = await window.electronAPI.generateDoc({
+            company: {
+                name: "ТОО ТЕСТОВЫЙ СЕРВИС",
+                region: "Республика Казахстан",
+                id: "100100100100",
+                kbe: 17,
+                url: "https://test.kz",
+                okeds: "4910 - Тест"
+            }
+        })
+            console.log("Документ создан:", outputPath);
+        } catch (err) {
+            console.error("Ошибка генерации DOCX:", err);
+        }
+    
+
+    }
 
     const handleAddPerson = (person: PersonData) => {
         if (editIndex !== null) {
@@ -78,39 +101,39 @@ const App = () => {
         if (prevStep) setStep(prevStep);
     };
 
-    const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
-        event.preventDefault();
+    // const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    //     event.preventDefault();
 
-        if (!merchant?.identifier) {
-            toast.error("Введите корректный БИН (12 цифр)");
-            return;
-        }
-        if (!bankData?.iik || !bankData.bank) {
-            toast.error("Заполните банковские реквизиты");
-            return;
-        }
-        if (persons.length === 0) {
-            toast.error("Добавьте хотя бы одного человека");
-            return;
-        }
+    //     if (!merchant?.identifier) {
+    //         toast.error("Введите корректный БИН (12 цифр)");
+    //         return;
+    //     }
+    //     if (!bankData?.iik || !bankData.bank) {
+    //         toast.error("Заполните банковские реквизиты");
+    //         return;
+    //     }
+    //     if (persons.length === 0) {
+    //         toast.error("Добавьте хотя бы одного человека");
+    //         return;
+    //     }
 
-        try {
-            setLoading(true);
+    //     try {
+    //         setLoading(true);
 
-            await api.generateApplication({
-                merchant,
-                persons,
-                bank: bankData,
-            });
+    //         await api.generateApplication({
+    //             merchant,
+    //             persons,
+    //             bank: bankData,
+    //         });
 
-            toast.success("Заявление успешно сгенерировано");
-        } catch (error) {
-            console.error(error);
-            toast.error("Ошибка при генерации приложения");
-        } finally {
-            setLoading(false);
-        }
-    };
+    //         toast.success("Заявление успешно сгенерировано");
+    //     } catch (error) {
+    //         console.error(error);
+    //         toast.error("Ошибка при генерации приложения");
+    //     } finally {
+    //         setLoading(false);
+    //     }
+    // };
     const handleDeletePerson = (index: number) => {
         // Создаем переменную для отмены
 
@@ -154,15 +177,17 @@ const App = () => {
             <Fieldset legend="Формат приложения">
                 <VariantPicker<WorkScheme>
                     options={SYSTEM_TYPES}
-                    value={schemeWork}
-                    onChange={(value) => setSchemeWork(value as WorkScheme)}
+                    value={workSchemes}
+                    mode="multiple"
+                    onChange={(value) => setWorkSchemes(value as WorkScheme[])}
                     title="Схема работы"
                 />
                 <VariantPicker<AgreementType>
                     options={AGREEMENT_TYPES}
-                    value={agreementType}
+                    value={agreementTypes}
+                    mode="multiple"
                     onChange={(value) =>
-                        setAgreementType(value as AgreementType)
+                        setAgreementTypes(value as AgreementType[])
                     }
                     title="Вид договора"
                 />
@@ -227,7 +252,7 @@ const App = () => {
                     {StepOrder.indexOf(step) + 1}/{StepOrder.length}
                 </p>
                 <form
-                    onSubmit={handleSubmit}
+                    // onSubmit={handleSubmit}
                     className="flex flex-col gap-2 mt-2"
                 >
                     {stepForm}
@@ -247,7 +272,7 @@ const App = () => {
                             </Button>
                         ) : (
                             <>
-                                <Button loading={loading} type="submit">
+                                <Button loading={loading} type="button" onClick={handleGenerate}>
                                     Сгенерировать
                                 </Button>
                             </>

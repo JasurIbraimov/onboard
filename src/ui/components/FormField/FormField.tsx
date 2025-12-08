@@ -6,7 +6,6 @@ import { BANKS } from "../../constants";
 import countries from "i18n-iso-countries";
 import ru from "i18n-iso-countries/langs/ru.json";
 import clsx from "clsx";
-import DateField from "./DateField";
 import RadioField from "./RadioField";
 import FileField from "./FileField";
 import FormFieldWrapper from "./FormFieldWrapper";
@@ -103,15 +102,6 @@ const FormField = ({
                         className="range"
                         onChange={(e) => onChange?.(e.target.value)}
                         {...props}
-                    />
-                );
-
-            case "date":
-                return (
-                    <DateField
-                        error={error}
-                        onStateChange={onChange}
-                        value={value as string}
                     />
                 );
 

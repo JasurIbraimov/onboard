@@ -41,7 +41,6 @@ const BankForm = ({ onChange, data: providedData }: BankFormProps) => {
             /> */}
 
             <FormField
-                required
                 type="bank"
                 id="bank"
                 label="Банк"
@@ -60,7 +59,6 @@ const BankForm = ({ onChange, data: providedData }: BankFormProps) => {
                 label="ИИК"
                 value={data.iik}
                 onChange={(val) => updateField({ iik: val as string })}
-                required
             />
         </Fieldset>
     );
