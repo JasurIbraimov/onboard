@@ -8,6 +8,12 @@ import {
     type AgreementType,
 } from "./types/index.type";
 
+import Docxtemplater from "docxtemplater";
+import PizZip from "pizzip";
+import { saveAs } from "file-saver";
+
+
+
 import Nav from "./components/Nav/Nav";
 import VariantPicker from "./components/VariantPicker/VariantPicker";
 import toast, { Toaster } from "react-hot-toast";
@@ -16,7 +22,6 @@ import MerchantForm from "./features/MerchantForm/MerchantForm";
 import PersonForm from "./features/PersonForm/PersonForm";
 import BankForm from "./features/BankForm/BankForm";
 import Fieldset from "./components/FormField/Fieldset";
-import { api } from "./api";
 import { LuPlus, LuTriangleAlert } from "react-icons/lu";
 import Modal from "./components/Modal/Modal";
 import { AGREEMENT_TYPES, SYSTEM_TYPES } from "./constants";
@@ -52,24 +57,21 @@ const App = () => {
 
 
     const handleGenerate = async () => {
-        try {
-            console.log(window.electronAPI)
-            const outputPath = await window.electronAPI.generateDoc({
-            company: {
-                name: "ТОО ТЕСТОВЫЙ СЕРВИС",
-                region: "Республика Казахстан",
-                id: "100100100100",
-                kbe: 17,
-                url: "https://test.kz",
-                okeds: "4910 - Тест"
-            }
-        })
-            console.log("Документ создан:", outputPath);
-        } catch (err) {
-            console.error("Ошибка генерации DOCX:", err);
-        }
-    
+        const template = await fetch("/templates/Пр2_ДМерчант_СЭП(ЮЛ).docx").then(r => r.arrayBuffer());
 
+        const zip = new PizZip(template);
+        const doc = new Docxtemplater(zip);
+
+        doc.render({
+            company: {
+                name: "Test Company",
+                id: "100100"
+            }
+        });
+
+
+        const out = doc.getZip().generate({ type: "blob" });
+        saveAs(out, "report.docx");
     }
 
     const handleAddPerson = (person: PersonData) => {

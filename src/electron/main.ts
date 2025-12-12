@@ -1,34 +1,31 @@
-import { app, BrowserWindow, ipcMain } from "electron";
+// main.ts
+import { app, BrowserWindow } from "electron";
 import path from "path";
-import { fileURLToPath } from "url";
-
-// путь к текущему файлу
-const __filename = fileURLToPath(import.meta.url);
-
-// путь к папке с файлом
-const __dirname = path.dirname(__filename);
-let mainWindow: BrowserWindow;
+import { isDev } from "./utils/common-utils.js";
 
 
+let mainWindow: BrowserWindow | null = null;
 
-app.whenReady().then(() => {
+function createMainWindow() {
   mainWindow = new BrowserWindow({
     width: 1200,
     height: 800,
     webPreferences: {
-      preload: path.join(__dirname, "preload.js"),
       contextIsolation: true,
-      nodeIntegration: false
+      nodeIntegration: false,
+      sandbox: false,
     }
   });
+  if (isDev()) {
+    // Vite dev server
+    mainWindow.loadURL("http://localhost:5173");
+  } else {
+    // Production build
+    mainWindow.loadFile(path.join(process.cwd(), "dist-react/index.html"));
+  }
 
-  mainWindow.loadFile(path.join(__dirname, "../dist-react/index.html"));
-});
+}
 
-// обработчик генерации документа
-ipcMain.handle("generate-doc", async (event, data: any) => {
-  console.log("Data from renderer:", data);
-  // здесь логика генерации DOCX
-  const outputPath = "C:\\Users\\jibraimov\\Desktop\\Projects\\Onboard\\src"; // пример
-  return outputPath;
-});
+// Создание главного окна после готовности приложения
+app.whenReady().then(createMainWindow);
+

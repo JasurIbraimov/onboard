@@ -1,9 +1,12 @@
 {
-    "compilerOptions": {
-        "strict": true,
-        "target": "esnext",
-        "module": "nodenext",
-        "outDir": "../../dist-electron",
-        "skipLibCheck": true
-    }
+  "compilerOptions": {
+    "target": "ES2020",
+    "module": "nodenext",
+    "moduleResolution": "nodenext",
+    "outDir": "../../dist-electron",
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "strict": true,
+    "types": ["node", "electron"]
+  },
 }
