@@ -4,7 +4,6 @@ import type {
     PhoneNumber,
     PersonData,
     Country,
-    YesNo,
     IdDataResponse,
 } from "../../types/index.type";
 import { ROLES, YESNO, PHONE_USAGES } from "../../constants";
@@ -28,13 +27,14 @@ const initialState: PersonData = {
     idData: null,
     citizenships: [],
     taxResidency: [],
-    isPublic: "no",
-    isAffiliated: "no",
-    share: "100",
+    isPublic: false,
+    isAffiliated: false,
+    share: 100,
     phoneNumbers: [],
     email: "",
     post: "",
     registrationAddress: "",
+    isContact: false
 };
 
 const PersonForm: React.FC<PersonFormProps> = ({ onSave, prepopulate }) => {
@@ -100,20 +100,20 @@ const PersonForm: React.FC<PersonFormProps> = ({ onSave, prepopulate }) => {
             return false;
         }
 
-        if (!idData?.id_number?.trim()) {
+        if (!idData?.idNumber?.trim()) {
             addError("id_number");
             toast.error("Введите номер удостоверения личности");
             return false;
         }
 
-        if (!idData?.id_issue_date?.trim()) {
+        if (!idData?.issueDate?.trim()) {
             toast.error("Укажите дату выдачи документа");
             addError("id_issue_date");
 
             return false;
         }
 
-        if (!idData?.id_expiry_date?.trim()) {
+        if (!idData?.expiryDate?.trim()) {
             toast.error("Укажите дату окончания срока действия документа");
             addError("id_expiry_date");
 
@@ -122,9 +122,9 @@ const PersonForm: React.FC<PersonFormProps> = ({ onSave, prepopulate }) => {
 
         // Проверка дат: дата окончания > дата выдачи
         if (
-            idData.id_issue_date &&
-            idData.id_expiry_date &&
-            new Date(idData.id_expiry_date) <= new Date(idData.id_issue_date)
+            idData.issueDate &&
+            idData.expiryDate &&
+            new Date(idData.expiryDate) <= new Date(idData.issueDate)
         ) {
             toast.error(
                 "Дата окончания действия должна быть позже даты выдачи"
@@ -153,8 +153,7 @@ const PersonForm: React.FC<PersonFormProps> = ({ onSave, prepopulate }) => {
             return false;
         }
 
-        const share = Number(person.share);
-        if (isNaN(share) || share <= 0 || share > 100) {
+        if (isNaN(person.share) || person.share <= 0 || person.share > 100) {
             toast.error("Доля должна быть числом от 1 до 100");
             addError("share");
             return false;
@@ -277,19 +276,19 @@ const PersonForm: React.FC<PersonFormProps> = ({ onSave, prepopulate }) => {
                 }}
             />
 
-            <VariantPicker<string>
+            <VariantPicker<boolean>
                 title="Является публичным лицом?"
                 options={YESNO}
                 value={person.isPublic}
-                onChange={(val) => updateField("isPublic", val as YesNo)}
+                onChange={(val) => updateField("isPublic", val as boolean)}
                 mode="single"
             />
 
-            <VariantPicker<string>
+            <VariantPicker<boolean>
                 title="Является аффилированным лицом?"
                 options={YESNO}
                 value={person.isAffiliated}
-                onChange={(val) => updateField("isAffiliated", val as YesNo)}
+                onChange={(val) => updateField("isAffiliated", val as boolean)}
                 mode="single"
             />
 
@@ -298,7 +297,7 @@ const PersonForm: React.FC<PersonFormProps> = ({ onSave, prepopulate }) => {
                 error={errors.includes("share")}
                 label="Доля (%)"
                 value={person.share}
-                onChange={(val) => updateField("share", val as string)}
+                onChange={(val) => updateField("share", parseInt(val as string))}
                 required
                 type="number"
             />
@@ -326,6 +325,15 @@ const PersonForm: React.FC<PersonFormProps> = ({ onSave, prepopulate }) => {
                     },
                 }}
             />
+
+            <VariantPicker<boolean>
+                title="Является контактным лицом?"
+                options={YESNO}
+                value={person.isContact}
+                onChange={(val) => updateField("isContact", val as boolean)}
+                mode="single"
+            />
+
 
             <FormField
                 id="email"

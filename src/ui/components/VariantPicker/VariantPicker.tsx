@@ -13,7 +13,8 @@ interface CommonProps<T> {
     className?: string;
     options: Readonly<Array<T | Variant<T>>>;
     showOther?: boolean;
-    error?: boolean
+    error?: boolean;
+    suffix?: string;
 }
 
 // single
@@ -32,13 +33,14 @@ interface MultipleProps<T> extends CommonProps<T> {
 
 type Props<T> = SingleProps<T> | MultipleProps<T>;
 
-function VariantPicker<T extends string | number>({
+function VariantPicker<T extends string | number | boolean>({
     title,
     options,
     value,
     onChange,
     showOther = false,
     error, 
+    suffix=":",
     className,
     mode = "single",
 }: Props<T>) {
@@ -92,7 +94,7 @@ function VariantPicker<T extends string | number>({
         <div>
             {title && (
                 <label className="label">
-                    <span className="label-text font-medium">{title}</span>
+                    <span className="label-text font-medium">{title}{suffix}</span>
                 </label>
             )}
 

@@ -1,11 +1,13 @@
 import { useState } from "react";
-import type { MerchantResponse, OkedResponse } from "../../types/index.type";
+import type { AddressType, MerchantResponse, OkedResponse } from "../../types/index.type";
 import FormField from "../../components/FormField/FormField";
 import EditableList from "../../components/EditableList/EditableList";
 import Fieldset from "../../components/FormField/Fieldset";
 import Button from "../../components/Button/Button";
 import { countryNames } from "../../utils";
 import MerchantAPI from "../../api/merchant"
+import VariantPicker from "../../components/VariantPicker/VariantPicker";
+import { ADDRESS_TYPES } from "../../constants";
 
 
 type Props = {
@@ -16,19 +18,19 @@ type Props = {
 const MerchantForm = ({ value, onChange }: Props) => {
     const [merchant, setMerchant] = useState<MerchantResponse>(
         value ?? {
-            identifier: "",
+            id: "",
             name: "",
             type: "TOO",
-            extra_okeds: [],
-            last_register_date: "",
-            register_date: "",
-            law_address: "",
+            extraOkeds: [],
+            lastRegisterDate: "",
+            registerDate: "",
             region: "KZ",
         }
     );
 
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [addressTypes, setAddressTypes] = useState<AddressType[]>(["law"]);
 
     const updateField = <K extends keyof MerchantResponse>(
         key: K,
@@ -40,13 +42,13 @@ const MerchantForm = ({ value, onChange }: Props) => {
     };
 
     const fetchMerchant = async () => {
-        if (!merchant.identifier) return;
+        if (!merchant.id) return;
 
         setLoading(true);
         setError(null);
 
         try {
-            const found = await MerchantAPI.fetchByIdentifier(merchant.identifier);
+            const found = await MerchantAPI.fetchByIdentifier(merchant.id);
             if (found) {
                 setMerchant({
                     ...found,
@@ -79,7 +81,7 @@ const MerchantForm = ({ value, onChange }: Props) => {
                         <Button
                             type="button"
                             onClick={fetchMerchant}
-                            disabled={loading || !merchant.identifier}
+                            disabled={loading || !merchant.id}
                             loading={loading}
                         >
                             Получить данные
@@ -87,9 +89,8 @@ const MerchantForm = ({ value, onChange }: Props) => {
                     }
                     id="identifier"
                     label="БИН/ИИН"
-                    value={merchant.identifier}
-                    onChange={(val) => updateField("identifier", val as string)}
-                    placeholder="Введите БИН/ИИН"
+                    value={merchant.id}
+                    onChange={(val) => updateField("id", val as string)}
                     required
                 />
                 {error && <span className="text-red-600 text-sm">{error}</span>}
@@ -100,17 +101,40 @@ const MerchantForm = ({ value, onChange }: Props) => {
                 label="Наименование"
                 value={merchant.name}
                 onChange={(val) => updateField("name", val as string)}
-                placeholder="Например: ТОО «Компания»"
                 required
             />
 
-            <FormField
-                id="law_address"
-                label="Юридический адрес"
-                value={merchant.law_address ?? ""}
-                onChange={(val) => updateField("law_address", countryNames[val as string])}
-                placeholder="Например, Республика Казахстан, г. Астана, ул. ..."
+            <VariantPicker<AddressType>
+                options={ADDRESS_TYPES}
+                value={addressTypes}
+                mode="multiple"
+                onChange={(value) => setAddressTypes(value as AddressType[])}
+                title="Адреса"
+                className="flex-wrap"
             />
+
+            {addressTypes.map((addressValue) => {
+                const addressType = ADDRESS_TYPES.find(
+                    (t) => t.value === addressValue
+                );
+
+                if (!addressType) return null;
+
+                return (
+                    <FormField
+                        key={addressValue}
+                        id={addressValue}
+                        label={addressType.label}
+                        value={merchant?.addresses?.[addressValue]}
+                        onChange={(val) =>
+                            updateField("addresses", {
+                                ...(merchant?.addresses ?? {}),
+                                [addressValue]: val as string,
+                            })
+                        }
+                    />
+                );
+            })}
 
             <FormField
                 id="region"
@@ -130,26 +154,26 @@ const MerchantForm = ({ value, onChange }: Props) => {
                 <FormField
                     label="Дата регистрации"
                     type="date"
-                    value={merchant.register_date || ""}
+                    value={merchant.registerDate || ""}
                     onChange={(val) =>
-                        updateField("register_date", val as string)
+                        updateField("registerDate", val as string)
                     }
                 />
 
                 <FormField
                     label="Дата последней перерегистрации"
                     type="date"
-                    value={merchant.last_register_date || ""}
+                    value={merchant.lastRegisterDate || ""}
                     onChange={(val) =>
-                        updateField("last_register_date", val as string)
+                        updateField("lastRegisterDate", val as string)
                     }
                 />
             </div>
 
             <EditableList<OkedResponse>
                 title="Основной ОКЭД"
-                items={merchant.main_oked ? [merchant.main_oked] : []}
-                onChange={(items) => updateField("main_oked", items[0] ?? null)}
+                items={merchant.mainOked ? [merchant.mainOked] : []}
+                onChange={(items) => updateField("mainOked", items[0] ?? null)}
                 unique
                 renderItem={(item) => (
                     <>
@@ -167,8 +191,8 @@ const MerchantForm = ({ value, onChange }: Props) => {
 
             <EditableList<OkedResponse>
                 title="Доп. ОКЭДы"
-                items={merchant.extra_okeds}
-                onChange={(items) => updateField("extra_okeds", items)}
+                items={merchant.extraOkeds}
+                onChange={(items) => updateField("extraOkeds", items)}
                 unique
                 renderItem={(item) => (
                     <>

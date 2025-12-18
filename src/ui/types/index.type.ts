@@ -1,6 +1,9 @@
+import type { ADDRESS_TYPES } from "../constants";
+
 // --- Role Types ---
 export type Roles =
     | "founder"
+    | "beneficiary"
     | "first_head"
     | "signatory"
     | "questionnaire_filler"
@@ -21,16 +24,16 @@ export type PhoneNumber = {
 };
 
 export type Country = { country: string };
-export type YesNo = "no" | "yes"
 
 export interface PersonData {
     roles: Roles[];
     idData: IdDataResponse | null;
     citizenships: Country[];
     taxResidency: Country[];
-    isPublic: YesNo;
-    isAffiliated: YesNo;
-    share: string;
+    isPublic: boolean;
+    isAffiliated: boolean;
+    isContact: boolean;
+    share: number;
     phoneNumbers: PhoneNumber[];
     email: string;
     post: string;
@@ -44,11 +47,11 @@ export type IdDataResponse = {
     idFile?: null | File;
     surname?: string;
     patronymic?: string;
-    birth_date?: string;
-    id_number?: string;
-    id_issue_date?: string;
-    id_expiry_date?: string;
-    id_issuer?: string;
+    birthDate?: string;
+    idNumber?: string;
+    issueDate?: string;
+    expiryDate?: string;
+    issuer?: string;
 };
 
 // --- Bank Types ---
@@ -74,7 +77,7 @@ export type WorkScheme = "СЭП" | "СЭД";
 
 export type AgreementType = "Публичная оферта" | "Договор"
 
-
+export type AddressType = typeof ADDRESS_TYPES[number]["value"];
 
 // --- Merchant Types ---
 export type MerchantType = "TOO" | "IP" | "AO";
@@ -85,15 +88,15 @@ export type OkedResponse = {
 };
 
 export type MerchantResponse = {
-    identifier: string;
+    id: string;
     name: string;
-    full_name?: string | null;
-    law_address?: string | null;
-    register_date?: string | null;
-    last_register_date?: string | null;
+    fullName?: string | null;
+    addresses?: Partial<Record<AddressType, string>>;
+    registerDate?: string | null;
+    lastRegisterDate?: string | null;
     type: MerchantType;
-    main_oked?: OkedResponse | null;
-    extra_okeds: OkedResponse[];
+    mainOked?: OkedResponse | null;
+    extraOkeds: OkedResponse[];
     kbe?: string | null;
     region?: string | null;
 };

@@ -17,7 +17,8 @@ type EditableListProps<T extends object | string> = {
         | { type: "text"; placeholder?: string; inputType?: InputType }
         | { type: "variant"; options: { value: string; label: string }[] }
     >;
-    error?: boolean
+    error?: boolean;
+    suffix?: string
 };
 
 function EditableList<T extends object | string>({
@@ -28,6 +29,7 @@ function EditableList<T extends object | string>({
     unique,
     error,
     schema,
+    suffix = ":"
 }: EditableListProps<T>) {
     // Если string — отдельный state
     const [draftString, setDraftString] = useState<string>("");
@@ -114,7 +116,7 @@ function EditableList<T extends object | string>({
 
     return (
         <div>
-            {title && <p>{title}</p>}
+            {title && <p>{title}{suffix}</p>}
 
             <div className="flex gap-2 items-center mt-1 flex-wrap sm:flex-nowrap">
                 {schema ? (

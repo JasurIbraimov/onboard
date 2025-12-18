@@ -10,7 +10,6 @@ import RadioField from "./RadioField";
 import FileField from "./FileField";
 import FormFieldWrapper from "./FormFieldWrapper";
 import type { InputType } from "../../types/index.type";
-
 countries.registerLocale(ru);
 
 type NativeInputProps = Omit<
@@ -43,6 +42,7 @@ const FormField = ({
     className,
     actions,
     error,
+    disabled,
     ...props
 }: IProps) => {
     const countryOptions = Object.entries(countries.getNames("ru")).map(
@@ -126,10 +126,11 @@ const FormField = ({
                         }
                         onChange={(e) => onChange?.(e.target.value)}
                         className={clsx(
-                            "input grow outline-none",
+                            "input grow outline-none disabled:bg-base-100",
                             error && "border-error",
                             className
                         )}
+                        disabled={disabled}
                         {...props}
                     />
                 );
@@ -138,7 +139,7 @@ const FormField = ({
 
     return (
         <FormFieldWrapper
-            className="flex w-full items-center grow gap-2 flex-wrap sm:flex-nowrap"
+            className="flex w-full items-center grow gap-2 flex-wrap sm:flex-nowrap "
             label={label}
             labelSuffix={labelSuffix}
         >

@@ -1,7 +1,8 @@
 import type { PersonData } from "../../types/index.type";
-import { countryNames } from "../../utils";
+import { getCountryName } from "../../utils";
 import { LuCheck, LuPen, LuTrash, LuX } from "react-icons/lu";
 import Button from "../../components/Button/Button";
+import { PHONE_USAGES, ROLES } from "../../constants";
 
 interface IProps {
     persons: PersonData[];
@@ -15,6 +16,8 @@ const PersonsTable = ({ persons, onDeletePerson, onEditPerson }: IProps) => {
             <thead>
                 <tr>
                     <th>ФИО</th>
+                    <th>Роли</th>
+                    <th>Доля (%)</th>
                     <th>Должность</th>
                     <th>Удостоверение личности</th>
                     <th>Дата рождения</th>
@@ -22,7 +25,7 @@ const PersonsTable = ({ persons, onDeletePerson, onEditPerson }: IProps) => {
                     <th>Налоговое резиденство</th>
                     <th>Публичное лицо?</th>
                     <th>Аффилированное лицо?</th>
-                    <th>Доля (%)</th>
+                    <th>Контактное лицо?</th>
                     <th>Номера телефонов</th>
                     <th>Электронная почта</th>
                     <th>Действия</th>
@@ -35,42 +38,54 @@ const PersonsTable = ({ persons, onDeletePerson, onEditPerson }: IProps) => {
                             {p.idData?.surname} {p.idData?.name}{" "}
                             {p.idData?.patronymic}
                         </td>
+                        <td>
+                            {p.roles.map(role => (
+                                <p key={role}>{ROLES.find(r => r.role === role)?.label}</p>))}
+                        </td>
+                        <td>{p.share}</td>
                         <td>{p.post}</td>
                         <td>
                             ИИН: {p.idData?.iin}
                             <br />
-                            Номер удостоверения: {p.idData?.id_number}
+                            Номер удостоверения: {p.idData?.idNumber}
                             <br />
-                            Дата выдачи: {p.idData?.id_issue_date}
+                            Дата выдачи: {p.idData?.issueDate}
                             <br />
-                            Срок действия: {p.idData?.id_expiry_date}
+                            Срок действия: {p.idData?.expiryDate}
                             <br />
-                            Кем выдано: {p.idData?.id_issuer}
+                            Кем выдано: {p.idData?.issuer}
                         </td>
-                        <td>{p.idData?.birth_date}</td>
+                        <td>{p.idData?.birthDate}</td>
                         <td>
-                            {p.citizenships.map((citizenship) => (
-                                <p key={citizenship.country}>
-                                    {countryNames[citizenship.country]}
+                            {p.citizenships.map(({ country }) => (
+                                <p key={country}>
+                                    {getCountryName(country)}
                                 </p>
                             ))}
                         </td>
                         <td>
-                            {p.taxResidency.map((taxResidency) => (
-                                <p key={taxResidency.country}>
-                                    {countryNames[taxResidency.country]}
+                            {p.taxResidency.map(({ country }) => (
+                                <p key={country}>
+                                    {getCountryName(country)}
                                 </p>
                             ))}
                         </td>
-                        <td>{p.isPublic === "yes" ? <LuCheck /> : <LuX />}</td>
+                        <td>{p.isPublic ? <LuCheck /> : <LuX />}</td>
                         <td>
-                            {p.isAffiliated === "yes" ? <LuCheck /> : <LuX />}
+                            {p.isAffiliated ? <LuCheck /> : <LuX />}
                         </td>
-                        <td>{p.share}%</td>
                         <td>
-                            {p.phoneNumbers.map((phone) => (
+                            {p.isContact ? <LuCheck /> : <LuX />}
+                        </td>
+                        <td>
+                            {p.phoneNumbers.filter(phone => phone.usage === "work").map((phone) => (
                                 <p key={phone.number}>
-                                    {phone.number} - {phone.usage}
+                                    {PHONE_USAGES.find(p => p.value === phone.usage)?.label}: {phone.number}
+                                </p>
+                            ))}
+                            {p.phoneNumbers.filter(phone => phone.usage === "personal").map((phone) => (
+                                <p key={phone.number}>
+                                    {PHONE_USAGES.find(p => p.value === phone.usage)?.label}: {phone.number}
                                 </p>
                             ))}
                         </td>

@@ -1,6 +1,7 @@
 import type { IdDataResponse } from "../../types/index.type";
 import Button from "../../components/Button/Button";
 import FormField from "../../components/FormField/FormField";
+import { getBirthDateStringFromIIN } from "../../utils";
 
 type IdParserProps = {
     value: IdDataResponse | null;
@@ -22,10 +23,20 @@ const IdParser = ({
         field: keyof IdDataResponse,
         val: string | File | null
     ) => {
-        onChange({
-            ...(value || {}), // если value null — создаём объект
-            [field]: val,
-        });
+        if (field === "iin") {
+            const birthDate = getBirthDateStringFromIIN(val as string);
+
+            onChange({
+                ...(value || {}), // если value null — создаём объект
+                [field as string]: val,
+                birthDate: birthDate as string
+            })
+        } else {
+            onChange({
+                ...(value || {}), // если value null — создаём объект
+                [field]: val,
+            });
+        }
     };
 
     return (
@@ -78,44 +89,56 @@ const IdParser = ({
                     error={errors?.includes("iin")}
                     value={value?.iin || ""}
                     onChange={(val) => {
-                        updateIdField("iin", val as string);
+                        const iin = val as string;
+                        updateIdField("iin", iin);
+
+
+                    }}
+                />
+                <FormField
+                    label="Дата рождения"
+                    type="date"
+                    error={errors?.includes("birthDate")}
+                    value={value?.birthDate || ""}
+                    onChange={(val) => {
+                        updateIdField("birthDate", val as string);
                     }}
                 />
 
                 <FormField
-                    error={errors?.includes("id_number")}
+                    error={errors?.includes("idNumber")}
                     label="Номер удостоверения"
-                    value={value?.id_number || ""}
+                    value={value?.idNumber || ""}
                     onChange={(val) =>
-                        updateIdField("id_number", val as string)
+                        updateIdField("idNumber", val as string)
                     }
                 />
 
                 <FormField
                     label="Дата выдачи"
                     type="date"
-                    error={errors?.includes("id_issue_date")}
-                    value={value?.id_issue_date || ""}
+                    error={errors?.includes("issueDate")}
+                    value={value?.issueDate || ""}
                     onChange={(val) =>
-                        updateIdField("id_issue_date", val as string)
+                        updateIdField("issueDate", val as string)
                     }
                 />
 
                 <FormField
                     label="Дата окончания"
-                    error={errors?.includes("id_expiry_date")}
+                    error={errors?.includes("expiryDate")}
                     type="date"
-                    value={value?.id_expiry_date || ""}
+                    value={value?.expiryDate || ""}
                     onChange={(val) =>
-                        updateIdField("id_expiry_date", val as string)
+                        updateIdField("expiryDate", val as string)
                     }
                 />
                 <FormField
                     label="Кем выдано"
-                    error={errors?.includes("id_issuer")}
-                    value={value?.id_issuer || ""}
+                    error={errors?.includes("issuer")}
+                    value={value?.issuer || ""}
                     onChange={(val) =>
-                        updateIdField("id_issuer", val as string)
+                        updateIdField("issuer", val as string)
                     }
                 />
             </div>

@@ -1,18 +1,18 @@
 import { useState } from "react";
-import {
-    type WorkScheme,
-    type MerchantResponse,
-    type PersonData,
-    type BankData,
-    Steps,
-    type AgreementType,
+import type {
+    WorkScheme,
+    MerchantResponse,
+    PersonData,
+    BankData,
+    AgreementType,
+    Roles,
+    IdDataResponse,
 } from "./types/index.type";
+import { Steps } from "./types/index.type";
 
 import Docxtemplater from "docxtemplater";
 import PizZip from "pizzip";
 import { saveAs } from "file-saver";
-
-
 
 import Nav from "./components/Nav/Nav";
 import VariantPicker from "./components/VariantPicker/VariantPicker";
@@ -24,8 +24,10 @@ import BankForm from "./features/BankForm/BankForm";
 import Fieldset from "./components/FormField/Fieldset";
 import { LuPlus, LuTriangleAlert } from "react-icons/lu";
 import Modal from "./components/Modal/Modal";
-import { AGREEMENT_TYPES, SYSTEM_TYPES } from "./constants";
+import { AGREEMENT_TYPES, DEFAULT_TEMPLATE_USER, SYSTEM_TYPES } from "./constants";
 import PersonsTable from "./features/PersonsTable/PersonsTable";
+// import { testBank, testMerchant, testPersons } from "./constants/test";
+import { getCountryName } from "./utils";
 
 
 const App = () => {
@@ -41,9 +43,9 @@ const App = () => {
     const [agreementTypes, setAgreementTypes] =
         useState<AgreementType[]>([]);
 
-    const [merchant, setMerchant] = useState<MerchantResponse | null>(null);
-    const [bankData, setBankData] = useState<BankData | null>(null);
-    const [persons, setPersons] = useState<PersonData[]>([]);
+    const [merchant, setMerchant] = useState<MerchantResponse | null>(null); // testMerchant
+    const [bankData, setBankData] = useState<BankData | null>(null); // testBank
+    const [persons, setPersons] = useState<PersonData[]>([]); // testPersons
     const [currentPerson, setCurrentPerson] = useState<PersonData | null>(null);
     const [loading] = useState(false);
     const [editIndex, setEditIndex] = useState<number | null>(null);
@@ -57,15 +59,92 @@ const App = () => {
 
 
     const handleGenerate = async () => {
-        const template = await fetch("/templates/Пр2_ДМерчант_СЭП(ЮЛ).docx").then(r => r.arrayBuffer());
+        const fileName = encodeURIComponent('Пр2_ДМерчант_СЭП(ЮЛ).docx');
+        const template = await fetch(`/templates/${fileName}`).then(r => r.arrayBuffer());
 
         const zip = new PizZip(template);
-        const doc = new Docxtemplater(zip);
+        const doc = new Docxtemplater(zip, { linebreaks: true });
+
+        const generateIDText = (id: IdDataResponse | null) => id ? `№${id.idNumber}\nОрган выдачи: ${id.issuer}\nДата выдачи: ${id.issueDate}\nСрок действия: ${id.expiryDate}` : ""
+        const getFullname = (id: IdDataResponse | null) => `${id?.surname} ${id?.name} ${id?.patronymic}`
+        const getShortenedFullName = (person: PersonData) => `${person.idData?.surname} ${person.idData?.name?.[0]}. ${person.idData?.patronymic?.[0]}${person.idData?.patronymic?.length ? "." : ""}`
+        const getPersonsWithRole = (role: Roles) => persons.filter(person => person.roles.includes(role) && person.share > 10).map((person) => ({
+            ...person,
+            ...person.idData,
+            fullName: getFullname(person.idData),
+            shortenedFullName: getShortenedFullName(person),
+            id: generateIDText(person.idData),
+            citizenships: person.citizenships.map(p => getCountryName(p.country)).join("\n"),
+            taxResidency: person.taxResidency.map(p => getCountryName(p.country)).join("\n"),
+
+        }));
+        const isPersonNotFirstHeadOrAccountant = (fullName: string) => (fullName === chiefAccountant?.fullName || fullName === firstHead?.fullName)
+
+        const founders = getPersonsWithRole("founder")
+
+        const beneficiaries = getPersonsWithRole("beneficiary")
+
+        const chiefAccountant = getPersonsWithRole("chief_accountant")[0];
+
+        const signatory = getPersonsWithRole("signatory")[0];
+        const firstHead = getPersonsWithRole("first_head")[0];
+        const questionnaireFiller = getPersonsWithRole("questionnaire_filler")[0];
+        const userAuthorizedInSystem = getPersonsWithRole("merchant_authorized_user")[0];
+
+        const contactUsers = persons.filter(person => person.isContact).map((person, i) => ({
+            fullName: getFullname(person.idData),
+            phoneNumbers: person.phoneNumbers.map(n => n.number).join("\n"),
+            email: person.email,
+            id: i+1
+        }));
+
+
+
 
         doc.render({
-            company: {
-                name: "Test Company",
-                id: "100100"
+            merchant: {
+                ...merchant,
+                region: getCountryName(merchant?.region || ""),
+                addresses: {
+                    ...merchant?.addresses,
+                    actual: (!merchant?.addresses?.actual || merchant?.addresses?.actual === merchant?.addresses?.law) ? "" : merchant?.addresses?.actual,
+                    mailing: (!merchant?.addresses?.mailing || merchant?.addresses?.mailing === merchant?.addresses?.law) ? "" : merchant?.addresses?.mailing, 
+                    actualResolved: merchant?.addresses?.actual || merchant?.addresses?.law
+                }
+            },
+            founders: {
+                persons: founders,
+                companies: [],
+                publicPersons: founders.filter(person => person.isPublic).map(person => ({
+                    fullName: getFullname(person.idData)
+                })),
+                affiliatedPersons: founders.filter(person => person.isAffiliated).map(person => ({
+                    fullName: getFullname(person.idData)
+                })),
+                isPublic: founders.some((person) => person.isPublic) ? "Да" : "Нет",
+                isAffiliated: founders.some((person) => person.isAffiliated) ? "Да" : "Нет",
+            },
+
+            beneficiary: {
+                persons: beneficiaries,
+                isPublic: beneficiaries.some((person) => person.isPublic) ? "Да" : "Нет",
+                isAffiliated: beneficiaries.some((person) => person.isAffiliated) ? "Да" : "Нет",
+                publicPersons: beneficiaries.filter(person => person.isPublic).map(person => ({
+                    fullName: getFullname(person.idData)
+                })),
+                affiliatedPersons: beneficiaries.filter(person => person.isAffiliated).map(person => ({
+                    fullName: getFullname(person.idData)
+                })),
+            },
+            firstHead,
+            chiefAccountant: chiefAccountant || DEFAULT_TEMPLATE_USER,
+            signatory: isPersonNotFirstHeadOrAccountant(signatory?.fullName) ? DEFAULT_TEMPLATE_USER : signatory,
+            questionnaireFiller: isPersonNotFirstHeadOrAccountant(questionnaireFiller?.fullName) ? DEFAULT_TEMPLATE_USER : questionnaireFiller,
+            userAuthorizedInSystem: isPersonNotFirstHeadOrAccountant(userAuthorizedInSystem?.fullName) ? DEFAULT_TEMPLATE_USER : userAuthorizedInSystem,
+            contactUsers,
+            bankData: {
+                ...bankData?.bank,
+                iik: bankData?.iik
             }
         });
 

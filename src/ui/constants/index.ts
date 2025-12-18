@@ -3,7 +3,6 @@ import type {
     Bank,
     PhoneType,
     Role,
-    YesNo,
     AgreementType,
 } from "../types/index.type";
 
@@ -32,11 +31,15 @@ export const ROLES: Role[] = [
         label: "Главный бухгалтер",
         role: "chief_accountant",
     },
+        {
+        label: "Бенефициар",
+        role: "beneficiary",
+    },
 ] as const;
 
-export const YESNO: { value: YesNo; label: string }[] = [
-    { value: "no", label: "Нет" },
-    { value: "yes", label: "Да" },
+export const YESNO: { value: boolean; label: string }[] = [
+    { value: false, label: "Нет" },
+    { value: true, label: "Да" },
 ];
 
 export const PHONE_USAGES: { value: PhoneType; label: string }[] = [
@@ -77,9 +80,44 @@ export const BANKS: Bank[] = [
 
 export const SYSTEM_TYPES: WorkScheme[] = ["СЭД", "СЭП"]
 export const AGREEMENT_TYPES: AgreementType[] = ["Публичная оферта", "Договор"]
+export const ADDRESS_TYPES = [
+    {
+        label: "Юридический",
+        value: "law"
+    },
+    {
+        label: "Фактический",
+        value: "actual"
+    },
+    {
+        label: "Почтовый",
+        value: "mailing"
+    },
+] as const
+
 
 export const MERCHANT_TYPES = [
     { value: "TOO", label: "ТОО" },
     { value: "IP", label: "ИП" },
     { value: "AO", label: "АО" },
 ] as const;
+
+
+
+
+export const DEFAULT_TEMPLATE_USER = {
+    iin: "",
+    name: "",
+    surname: "",
+    patronymic: "",
+    birthDate: "",
+    id: "",
+    fullName:"",
+    citizenships: [],
+    taxResidency: [],
+    share: "",
+    phoneNumbers: [],
+    email:"",
+    post: "",
+    registrationAddress:""
+}

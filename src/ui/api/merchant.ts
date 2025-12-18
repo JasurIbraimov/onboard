@@ -45,14 +45,16 @@ class MerchantAPI {
         const fullName = data.full_name || "";
 
         return {
-            identifier,
+            id: identifier,
             name: data.name,
-            full_name: data.full_name || null,
-            law_address: this.formatLawAddress(data.law_address || "", this.normalizeRegion(data.region)),
-            register_date: this.parseDate(data.register_date),
-            last_register_date: this.parseDate(data.last_register_date),
-            main_oked: this.buildOked(data.oked),
-            extra_okeds: this.parseSecondaryOkeds(data.secondary_oked),
+            fullName: data.full_name || null,
+            addresses: {
+                law: this.formatLawAddress(data.law_address || "", this.normalizeRegion(data.region)) ?? ""
+            },
+            registerDate: this.parseDate(data.register_date),
+            lastRegisterDate: this.parseDate(data.last_register_date),
+            mainOked: this.buildOked(data.oked),
+            extraOkeds: this.parseSecondaryOkeds(data.secondary_oked),
             kbe: data.kbe || null,
             region: this.normalizeRegion(data.region),
             type: this.detectCompanyType(fullName, data.ip, data.type),
